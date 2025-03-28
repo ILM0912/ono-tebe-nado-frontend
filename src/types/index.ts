@@ -38,3 +38,8 @@ export interface IBid {
 export interface IOrderResult {
     id: string;
 }
+
+//добавил
+export interface IAppData {
+    catalog: ILot[];
+}

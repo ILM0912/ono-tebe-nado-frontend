@@ -3,9 +3,11 @@ import './scss/styles.scss';
 import {AuctionAPI} from "./components/AuctionAPI";
 import {API_URL, CDN_URL} from "./utils/constants";
 import {EventEmitter} from "./components/base/events";
+import { AppData } from './components/AppData';
 
 const events = new EventEmitter();
 const api = new AuctionAPI(CDN_URL, API_URL);
+const appData = new AppData({}, events);
 
 // Чтобы мониторить все события, для отладки
 events.onAll(({ eventName, data }) => {
@@ -31,8 +33,7 @@ events.onAll(({ eventName, data }) => {
 // Получаем лоты с сервера
 api.getLotList()
     .then(result => {
-        // вместо лога поместите данные в модель
-        console.log(result);
+        appData.setCatalog(result);
     })
     .catch(err => {
         console.error(err);
