@@ -46,10 +46,10 @@ export class LotElement extends Model<ILot> {
     }
 
     placeBid(price: number): void {
-        if (price <= this.history.at(-1)) {
-            console.log('Ставка должна быть больше предыдущей');
-            return;
-        }
+        // if (price <= this.history.at(-1)) {
+        //     console.log('Ставка должна быть больше предыдущей');
+        //     return;
+        // }
 
         this.price = price;
         this.history.shift();
