@@ -42,4 +42,5 @@ export interface IOrderResult {
 //добавил
 export interface IAppData {
     catalog: ILot[];
+    basket: ILot[];
 }

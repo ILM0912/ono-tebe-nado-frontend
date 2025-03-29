@@ -28,6 +28,8 @@ export class LotElement extends Model<ILot> {
     minPrice: number;
     history: number[];
 
+    private userLastBid: number = 0;
+
     get statusInfo(): string {
         switch (this.status) {
             case "active":
@@ -54,10 +56,11 @@ export class LotElement extends Model<ILot> {
         this.price = price;
         this.history.shift();
         this.history.push(price);
+        this.userLastBid = price;
 
         // ну я пытался но оно не работает
         const api = new AuctionAPI(CDN_URL, API_URL);
-        api.placeBid(this.id, {price: this.price});
+        api.placeBid(this.id, {price: this.userLastBid});
 
 
         if (price > (this.minPrice * 10)) {
@@ -85,11 +88,25 @@ export class LotElement extends Model<ILot> {
                 return '';
         }
     }
+
+    get isAuctionWinner(): boolean {
+        return this.userLastBid === this.price;
+    }
+
+    get isUserInAuction(): boolean {
+        return this.userLastBid !== 0;
+    }
 }
 
 export class AppData extends Model<IAppData> {
     catalog: LotElement[];
+    basket: LotElement[];
     preview: ILot | null;
+    order: IOrder = {
+        email: '',
+        phone: '',
+        items: []
+    };
 
     setCatalog(elements: ILot[]) {
         this.catalog = elements.map(
@@ -101,5 +118,37 @@ export class AppData extends Model<IAppData> {
     setPreview(lot: ILot) {
         this.preview = lot;
         this.emitChanges('preview:changed', lot);
+    }
+
+    getActiveLots(): LotElement[] {
+        this.catalog.map(
+            lot => console.log(lot.status, lot.isUserInAuction)
+        )
+            
+        
+        return this.catalog.filter(lot => lot.status === 'active' && lot.isUserInAuction);
+    }
+
+    getClosedLots(): LotElement[] {
+        return this.catalog.filter(lot => lot.status === 'closed' && lot.isAuctionWinner)
+    }
+
+    getTotalPrice(): number {
+        let totalPrice = 0;
+        this.order.items.map(lotId => {
+            const item = this.catalog.find(element => element.id === lotId);
+            if (item) {
+                totalPrice += item.price;
+            }
+        });
+        return totalPrice;
+    }
+
+    toggleOrderedLot(id: string, isIncluded: boolean) {
+        if (isIncluded) {
+            this.order.items = _.uniq([...this.order.items, id]);
+        } else {
+            this.order.items = _.without(this.order.items, id);
+        }
     }
 }

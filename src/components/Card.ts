@@ -1,6 +1,6 @@
-import { bem, createElement, ensureElement, formatNumber } from "../../utils/utils";
-import { Component } from "../base/Component";
-import { LotStatus } from "../../types";
+import { bem, createElement, ensureElement, formatNumber } from "../utils/utils";
+import { Component } from "./base/Component";
+import { LotStatus } from "../types";
 
 interface ICardActions {
     onClick: (event: MouseEvent) => void;
@@ -173,5 +173,35 @@ export class Auction extends Component<AuctionStatus> {
 
     focus() {
         this.el_input.focus();
+    }
+}
+
+export interface BasketElementStatus {
+    amount: number;
+    status: boolean;
+}
+
+export class BasketElement extends Card<BasketElementStatus> {
+    protected el_amount: HTMLElement;
+    protected el_status: HTMLElement;
+    protected el_selector: HTMLInputElement;
+
+    constructor(container: HTMLElement, actions?: ICardActions) {
+        super('bid', container, actions);
+        this.el_amount = ensureElement<HTMLElement>('.bid__amount', container);
+        this.el_status = ensureElement<HTMLElement>('.bid__status', container);
+        this.el_selector = container.querySelector('.bid__selector-input');
+
+        if (!this.el_button && this.el_selector) {
+            this.el_selector.addEventListener('change', (event: MouseEvent) => {
+                actions?.onClick?.(event);
+            })
+        }
+    }
+
+    set status({ amount, status }: BasketElementStatus) {
+        this.setText(this.el_amount, formatNumber(amount));
+        if (status) this.setVisible(this.el_status);
+        else this.setHidden(this.el_status);
     }
 }

@@ -3,11 +3,12 @@ import './scss/styles.scss';
 import {AuctionAPI} from "./components/AuctionAPI";
 import {API_URL, CDN_URL} from "./utils/constants";
 import {EventEmitter} from "./components/base/events";
-import { cloneTemplate, ensureElement } from "./utils/utils";
+import { cloneTemplate, createElement, ensureElement } from "./utils/utils";
 import { AppData, CatalogChanged, LotElement } from './components/AppData';
 import { Page } from './components/Page';
-import { Auction, CatalogElement, PreviewElement } from './components/common/Card';
+import { Auction, BasketElement, CatalogElement, PreviewElement } from './components/Card';
 import { Modal } from './components/common/Modal';
+import { Basket, Tabs } from './components/Basket';
 
 const events = new EventEmitter();
 const api = new AuctionAPI(CDN_URL, API_URL);
@@ -22,6 +23,14 @@ const CatalogElementTemplate = ensureElement<HTMLTemplateElement>('#card');
 const PreviewElementTemplate = ensureElement<HTMLTemplateElement>('#preview');
 const AuctionTemplate = ensureElement<HTMLTemplateElement>('#auction');
 
+const ClosedLotsTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const ActiveLotsTemplate = ensureElement<HTMLTemplateElement>('#bids');
+
+const ClosedElementTemplate = ensureElement<HTMLTemplateElement>('#sold');
+const ActiveElementTemplate = ensureElement<HTMLTemplateElement>('#bid');
+
+const TabsTemplate = ensureElement<HTMLTemplateElement>('#tabs');
+
 // Модель данных приложения
 const appData = new AppData({}, events);
 
@@ -29,9 +38,18 @@ const appData = new AppData({}, events);
 // Глобальные контейнеры
 const page = new Page(document.body, events);
 const modalContainer = ensureElement<HTMLElement>('#modal-container');
+const basketContainer = ensureElement<HTMLElement>('.basket');
 
 // Переиспользуемые части интерфейса
 const modal = new Modal(modalContainer, events);
+const closedLots = new Basket(cloneTemplate(ClosedLotsTemplate), events);
+const activeLots = new Basket(cloneTemplate(ActiveLotsTemplate), events);
+const tabs = new Tabs(cloneTemplate(TabsTemplate), {
+    onClick: (name) => {
+        if (name === 'closed') events.emit('closed-lots:open');
+        else events.emit('active-lots:open');
+    }
+});
 
 // Дальше идет бизнес-логика
 // Поймали событие, сделали что нужно
@@ -121,6 +139,69 @@ events.on('preview:changed', (lot: LotElement) => {
     } else {
         modal.close();
     }
+});
+
+events.on('auction:changed', () => {
+    page.counter = appData.getClosedLots().length;
+    activeLots.items = appData.getActiveLots().map(
+        lot => {
+            const card = new BasketElement(cloneTemplate(ActiveElementTemplate), {
+                onClick: () => events.emit('preview:changed', lot)
+            });
+            return card.render({
+                title: lot.title,
+                image: lot.image,
+                status: {
+                    amount: lot.price,
+                    status: lot.isAuctionWinner
+                }
+            });
+        }
+    );
+
+    closedLots.items = appData.getClosedLots().map(
+        lot => {
+            const card = new BasketElement(cloneTemplate(ClosedElementTemplate), {
+                onClick: (event) => {
+                    const checkbox = event.target as HTMLInputElement;
+                    appData.toggleOrderedLot(lot.id, checkbox.checked);
+                    closedLots.total = appData.getTotalPrice();
+                    closedLots.selected = appData.order.items;
+                }
+            });
+            return card.render({
+                title: lot.title,
+                image: lot.image,
+                status: {
+                    amount: lot.price,
+                    status: lot.isAuctionWinner
+                }
+            });
+        }
+    );
+});
+
+
+events.on('active-lots:open', () => {
+    modal.render({
+        content: createElement<HTMLElement>('div', {}, [
+            tabs.render({
+                selected: 'active'
+            }),
+            activeLots.render()
+        ])
+    });
+});
+
+events.on('closed-lots:open', () => {
+    modal.render({
+        content: createElement<HTMLElement>('div', {}, [
+            tabs.render({
+                selected: 'closed'
+            }),
+            closedLots.render()
+        ])
+    });
 });
 
 events.on('modal:open', () => {

@@ -10,6 +10,8 @@ interface IPage {
 export class Page extends Component<IPage> {
     protected el_catalog: HTMLElement;
     protected el_wrapper: HTMLElement;
+    protected el_basket: HTMLElement;
+    protected el_counter: HTMLElement;
 
 
     constructor(container: HTMLElement, protected events: IEvents) {
@@ -17,6 +19,12 @@ export class Page extends Component<IPage> {
 
         this.el_catalog = ensureElement<HTMLElement>('.catalog__items');
         this.el_wrapper = ensureElement<HTMLElement>('.page__wrapper');
+        this.el_basket = ensureElement<HTMLElement>('.header__basket');
+        this.el_counter = ensureElement<HTMLElement>('.header__basket-counter');
+
+        this.el_basket.addEventListener('click', () => {
+            this.events.emit('active-lots:open');
+        });
     }
 
     set catalog(items: HTMLElement[]) {
@@ -29,5 +37,9 @@ export class Page extends Component<IPage> {
         } else {
             this.el_wrapper.classList.remove('page__wrapper_locked');
         }
+    }
+
+    set counter(value: number) {
+        this.setText(this.el_counter, String(value));
     }
 }
