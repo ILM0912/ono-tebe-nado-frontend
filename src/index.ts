@@ -9,6 +9,8 @@ import { Page } from './components/Page';
 import { Auction, BasketElement, CatalogElement, PreviewElement } from './components/Card';
 import { Modal } from './components/common/Modal';
 import { Basket, Tabs } from './components/Basket';
+import { Order } from './components/Order';
+import { IOrderForm } from './types';
 
 const events = new EventEmitter();
 const api = new AuctionAPI(CDN_URL, API_URL);
@@ -31,6 +33,8 @@ const ActiveElementTemplate = ensureElement<HTMLTemplateElement>('#bid');
 
 const TabsTemplate = ensureElement<HTMLTemplateElement>('#tabs');
 
+const OrderTemplate = ensureElement<HTMLTemplateElement>('#order');
+
 // Модель данных приложения
 const appData = new AppData({}, events);
 
@@ -44,6 +48,8 @@ const basketContainer = ensureElement<HTMLElement>('.basket');
 const modal = new Modal(modalContainer, events);
 const closedLots = new Basket(cloneTemplate(ClosedLotsTemplate), events);
 const activeLots = new Basket(cloneTemplate(ActiveLotsTemplate), events);
+const order = new Order(cloneTemplate(OrderTemplate), events);
+
 const tabs = new Tabs(cloneTemplate(TabsTemplate), {
     onClick: (name) => {
         if (name === 'closed') events.emit('closed-lots:open');
@@ -202,6 +208,37 @@ events.on('closed-lots:open', () => {
             closedLots.render()
         ])
     });
+});
+
+events.on('order:open', () => {
+    modal.render({
+        content: order.render({
+            phone: '',
+            email: '',
+            valid: false,
+            errors: ''
+        })
+    });
+});
+
+events.on(/^order\..*:change/, (data: { field: keyof IOrderForm, value: string }) => {
+    const valid = appData.setOrderField(data.field, data.value);
+    order.valid = valid;
+    if (valid) {
+        order.setFormErrors("теперь кайф...");
+    }
+});
+
+events.on(/^order\..*:error/, ( errors: string[] ) => {
+    if (errors.includes("no-field")) {
+        order.setFormErrors("Поля какие-то пустые...");
+    }
+    else if (errors.includes("email")) {
+        order.setFormErrors("email какой-то не такой...");
+    }
+    else if (errors.includes("phone")) {
+        order.setFormErrors("телефон какой-то не такой...");
+    }
 });
 
 events.on('modal:open', () => {

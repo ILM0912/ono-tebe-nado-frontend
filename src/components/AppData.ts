@@ -121,11 +121,6 @@ export class AppData extends Model<IAppData> {
     }
 
     getActiveLots(): LotElement[] {
-        this.catalog.map(
-            lot => console.log(lot.status, lot.isUserInAuction)
-        )
-            
-        
         return this.catalog.filter(lot => lot.status === 'active' && lot.isUserInAuction);
     }
 
@@ -150,5 +145,35 @@ export class AppData extends Model<IAppData> {
         } else {
             this.order.items = _.without(this.order.items, id);
         }
+    }
+
+    setOrderField(field: keyof IOrderForm, value: string): boolean {
+        this.order[field] = value;
+
+        const errors: string[] = this.validate();
+        errors.forEach(error => {
+            this.events.emit(`order.${error}:error`, errors);
+        });
+        return errors.length === 0;
+    }
+
+    validate(): string[] {
+        const phone = this.order.phone;
+        const email = this.order.email;
+        const errors: string[] = [];
+
+        const phoneRegex = /^(8|\+7)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        if (!email || !phone) {
+            errors.push('no-field');
+        }
+        if (!phoneRegex.test(phone)) {
+            errors.push('phone');
+        }
+        if (!emailRegex.test(email)) {
+            errors.push('email');
+        }
+        return errors;
     }
 }

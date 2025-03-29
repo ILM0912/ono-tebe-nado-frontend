@@ -76,7 +76,6 @@ export class Tabs extends Component<TabState> {
 
     set selected(name: string) {
         this.el_buttons.forEach(button => {
-            console.log(button.name, name);
             this.toggleClass(button, 'tabs__item_active', button.name === name);
             this.setDisabled(button, button.name === name)
         });
