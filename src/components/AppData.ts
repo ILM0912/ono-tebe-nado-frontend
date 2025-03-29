@@ -6,6 +6,10 @@ import { IEvents } from "./base/events";
 
 import { ILot, LotStatus, IOrder, IOrderResult, IBid, FormErrors, IOrderForm, IAppData } from "../types";
 
+export type CatalogChanged = {
+    catalog: LotElement[];
+}
+
 export class LotElement extends Model<ILot> {
     //ILotItem
     id: string;
@@ -20,6 +24,19 @@ export class LotElement extends Model<ILot> {
     price: number;
     minPrice: number;
     history: number[];
+
+    get statusInfo(): string {
+        switch (this.status) {
+            case "active":
+                return `Открыто до ${dayjs(this.datetime).format('D MMMM [в] HH:mm')}`
+            case "closed":
+                return `Закрыто ${dayjs(this.datetime).format('D MMMM [в] HH:mm')}`
+            case "wait":
+                return `Откроется ${dayjs(this.datetime).format('D MMMM [в] HH:mm')}`
+            default:
+                return this.status;
+        }
+    }
 }
 
 export class AppData extends Model<IAppData> {
