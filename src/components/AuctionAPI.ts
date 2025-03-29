@@ -21,6 +21,7 @@ export class AuctionAPI extends Api implements IAuctionAPI {
         return this.get(`/lot/${id}`).then(
             (item: ILot) => ({
                 ...item,
+                history: item.history.slice(1).concat(item.price),
                 image: this.cdn + item.image,
             })
         );
