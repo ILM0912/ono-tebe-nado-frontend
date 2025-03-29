@@ -1,9 +1,13 @@
-import { bem, ensureElement } from "../../utils/utils";
+import { bem, createElement, ensureElement, formatNumber } from "../../utils/utils";
 import { Component } from "../base/Component";
 import { LotStatus } from "../../types";
 
 interface ICardActions {
     onClick: (event: MouseEvent) => void;
+}
+
+interface IAuctionActions {
+    onSubmit: (price: number) => void;
 }
 
 export interface ICard<T> {
@@ -86,5 +90,88 @@ export class CatalogElement extends Card<CatalogElementStatus> {
         this.setText(this.el_status, info);
         this.toggleClass(this.el_status, bem(this.blockName, 'status', 'active').name, status === 'active');
         this.toggleClass(this.el_status, bem(this.blockName, 'status', 'closed').name, status === 'closed');
+    }
+}
+
+export class PreviewElement extends Card<HTMLElement> {
+    protected el_status: HTMLElement;
+
+    constructor(container: HTMLElement, actions?: ICardActions) {
+        super('lot', container, actions);
+        this.el_status = ensureElement<HTMLElement>('.lot__status', container);
+    }
+
+    set status(content: HTMLElement) {
+        this.el_status.replaceWith(content);
+    }
+}
+
+export type AuctionStatus = {
+    status: string,
+    time: string,
+    label: string,
+    nextBid: number,
+    history: number[]
+};
+
+export class Auction extends Component<AuctionStatus> {
+    protected el_time: HTMLElement;
+    protected el_label: HTMLElement;
+    protected el_button: HTMLButtonElement;
+    protected el_input: HTMLInputElement;
+    protected el_history: HTMLElement;
+    protected el_bids: HTMLElement
+    protected el_form: HTMLFormElement;
+
+    constructor(container: HTMLElement, actions?: IAuctionActions) {
+        super(container);
+
+        this.el_time = ensureElement<HTMLElement>(`.lot__auction-timer`, container);
+        this.el_label = ensureElement<HTMLElement>(`.lot__auction-text`, container);
+        this.el_button = ensureElement<HTMLButtonElement>(`.button`, container);
+        this.el_input = ensureElement<HTMLInputElement>(`.form__input`, container);
+        this.el_bids = ensureElement<HTMLElement>(`.lot__history-bids`, container);
+        this.el_history = ensureElement<HTMLElement>('.lot__history', container);
+        this.el_form = ensureElement<HTMLFormElement>(`.lot__bid`, container);
+
+        this.el_form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const inputValue = parseInt(this.el_input.value);
+            actions?.onSubmit?.(inputValue);
+            return false;
+        });
+    }
+
+    set time(value: string) {
+        this.setText(this.el_time, value);
+    }
+
+    set label(value: string) {
+        this.setText(this.el_label, value);
+    }
+
+    set nextBid(value: number) {
+        this.el_input.value = String(value);
+    }
+
+    set history(value: number[]) {
+        this.el_bids.replaceChildren(...value.map(item => createElement<HTMLUListElement>('li', {
+            className: 'lot__history-item',
+            textContent: formatNumber(item)
+        })));
+    }
+
+    set status(value: LotStatus) {
+        if (value !== 'active') {
+            this.setHidden(this.el_history);
+            this.setHidden(this.el_form);
+        } else {
+            this.setVisible(this.el_history);
+            this.setVisible(this.el_form);
+        }
+    }
+
+    focus() {
+        this.el_input.focus();
     }
 }
