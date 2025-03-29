@@ -109,7 +109,10 @@ events.on('preview:changed', (lot: LotElement) => {
         api.getLotItem(lot.id)
             .then((result) => {
                 lot.description = result.description;
-                lot.history = result.history;
+                // заглушка потому что данные на сервере не обрабатываются
+                if (!lot.history) {
+                    lot.history = result.history;
+                }
                 showItem(lot);
             })
             .catch((err) => {
