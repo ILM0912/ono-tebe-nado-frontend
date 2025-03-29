@@ -30,6 +30,10 @@ export class LotElement extends Model<ILot> {
 
     private userLastBid: number = 0;
 
+    clearUserLastBid() {
+        this.userLastBid = 0;
+    }
+
     get statusInfo(): string {
         switch (this.status) {
             case "active":
@@ -175,5 +179,13 @@ export class AppData extends Model<IAppData> {
             errors.push('email');
         }
         return errors;
+    }
+
+    clearBasket(): void {
+        this.order.items.forEach(id => {
+            this.toggleOrderedLot(id, false);
+            const element = this.catalog.find(lot => lot.id === id);
+            element.clearUserLastBid();
+        });
     }
 }

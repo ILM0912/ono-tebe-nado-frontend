@@ -9,7 +9,7 @@ import { Page } from './components/Page';
 import { Auction, BasketElement, CatalogElement, PreviewElement } from './components/Card';
 import { Modal } from './components/common/Modal';
 import { Basket, Tabs } from './components/Basket';
-import { Order } from './components/Order';
+import { Order, Success } from './components/Order';
 import { IOrderForm } from './types';
 
 const events = new EventEmitter();
@@ -34,6 +34,8 @@ const ActiveElementTemplate = ensureElement<HTMLTemplateElement>('#bid');
 const TabsTemplate = ensureElement<HTMLTemplateElement>('#tabs');
 
 const OrderTemplate = ensureElement<HTMLTemplateElement>('#order');
+
+const SuccessTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 // Модель данных приложения
 const appData = new AppData({}, events);
@@ -225,7 +227,7 @@ events.on(/^order\..*:change/, (data: { field: keyof IOrderForm, value: string }
     const valid = appData.setOrderField(data.field, data.value);
     order.valid = valid;
     if (valid) {
-        order.setFormErrors("теперь кайф...");
+        order.setFormErrors("");
     }
 });
 
@@ -239,6 +241,25 @@ events.on(/^order\..*:error/, ( errors: string[] ) => {
     else if (errors.includes("phone")) {
         order.setFormErrors("телефон какой-то не такой...");
     }
+});
+
+events.on('order:submit', () => {
+    api.orderLots(appData.order)
+        .then((result) => {
+            const success = new Success(cloneTemplate(SuccessTemplate), {
+                onClick: () => {
+                    modal.close();
+                    appData.clearBasket();
+                    events.emit('auction:changed');
+                }
+            });
+            modal.render({
+                content: success.render({})
+            });
+        })
+        .catch(err => {
+            console.log(err);
+        });
 });
 
 events.on('modal:open', () => {
