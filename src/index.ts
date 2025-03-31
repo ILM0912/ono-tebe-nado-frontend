@@ -44,7 +44,6 @@ const appData = new AppData({}, events);
 // Глобальные контейнеры
 const page = new Page(document.body, events);
 const modalContainer = ensureElement<HTMLElement>('#modal-container');
-const basketContainer = ensureElement<HTMLElement>('.basket');
 
 // Переиспользуемые части интерфейса
 const modal = new Modal(modalContainer, events);
