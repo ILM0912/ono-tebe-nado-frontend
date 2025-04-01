@@ -152,7 +152,7 @@ export class AppData extends Model<IAppData> {
     }
 
     setOrderField(field: keyof IOrderForm, value: string): boolean {
-        this.order[field] = value;
+        this.order[field] = value.trim();
 
         const errors: string[] = this.validate();
         errors.forEach(error => {
