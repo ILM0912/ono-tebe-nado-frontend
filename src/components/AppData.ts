@@ -166,7 +166,7 @@ export class AppData extends Model<IAppData> {
         const email = this.order.email;
         const errors: string[] = [];
 
-        const phoneRegex = /^(8|\+7)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/
+        const phoneRegex = /^(8|\+7)[\s]?\(?\d{3}\)?[\s]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/;
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
         if (!email || !phone) {
